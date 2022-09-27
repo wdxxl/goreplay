@@ -1,7 +1,8 @@
 
 ```
-changge pro.go  let var PRO = true
-
+1. change pro.go  let var PRO = true
+2. change s3_reader.go
+ 
 build-x64-env-base:
 	docker build -t $(CONTAINER)-base -f Dockerfile.base .
 

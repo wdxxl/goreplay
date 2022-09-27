@@ -7,7 +7,7 @@ PREFIX=
 RUN = docker run --rm -v `pwd`:$(SOURCE_PATH) -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) -e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) -p 0.0.0.0:$(PORT):$(PORT) -t -i $(CONTAINER)
 BENCHMARK = BenchmarkRAWInput
 TEST = TestRawListenerBench
-BIN_NAME = gor
+BIN_NAME = gor-pro
 VERSION = DEV-$(shell date +%s)
 LDFLAGS = -ldflags "-X main.VERSION=$(VERSION)$(PREFIX) -extldflags \"-static\" -X main.DEMO=$(DEMO)"
 MAC_LDFLAGS = -ldflags "-X main.VERSION=$(VERSION)$(PREFIX) -X main.DEMO=$(DEMO)"
