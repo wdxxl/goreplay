@@ -114,7 +114,6 @@ func (o *S3Output) onBufferUpdate(path string) {
 		return
 	}
 	defer os.Remove(path)
-
 	_, err = svc.PutObject(&s3.PutObjectInput{
 		Body:   file,
 		Bucket: aws.String(bucket),

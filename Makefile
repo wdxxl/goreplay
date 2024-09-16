@@ -2,12 +2,12 @@ SOURCE = $(shell ls -1 *.go | grep -v _test.go)
 SOURCE_PATH = /go/src/github.com/buger/goreplay/
 PORT = 8000
 FADDR = :8000
-CONTAINER=gor
+CONTAINER=wdxxl-gor:v0.0.1
 PREFIX=
 RUN = docker run --rm -v `pwd`:$(SOURCE_PATH) -e AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) -e AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) -p 0.0.0.0:$(PORT):$(PORT) -t -i $(CONTAINER)
 BENCHMARK = BenchmarkRAWInput
 TEST = TestRawListenerBench
-BIN_NAME = gor
+BIN_NAME = gor-pro
 VERSION = DEV-$(shell date +%s)
 LDFLAGS = -ldflags "-X main.VERSION=$(VERSION)$(PREFIX) -extldflags \"-static\" -X main.DEMO=$(DEMO)"
 MAC_LDFLAGS = -ldflags "-X main.VERSION=$(VERSION)$(PREFIX) -X main.DEMO=$(DEMO)"
@@ -24,19 +24,31 @@ FPMCOMMON= \
 
 .PHONY: vendor
 
+
+build-x64-env-base:
+	docker build -t $(CONTAINER)-base -f Dockerfile.base .
+
+release-bin-base:
+	docker run  --rm -v `pwd`:$(SOURCE_PATH) -t --env GOOS=linux --env GOARCH=amd64  -i $(CONTAINER)-base go build -mod=vendor -o $(BIN_NAME) -tags netgo $(LDFLAGS)
+
+
+
 release: release-x64 release-mac release-windows
 
 vendor:
 	go mod vendor
 
 release-bin: vendor
-	docker run  --rm -v `pwd`:$(SOURCE_PATH) -t --env GOOS=linux --env GOARCH=amd64  -i $(CONTAINER) go build -mod=vendor -o $(BIN_NAME) -tags netgo $(LDFLAGS)
+	docker run  --rm -v `pwd`:$(SOURCE_PATH) -t --env GOOS=linux --env GOARCH=amd64  -i $(CONTAINER)-base go build -mod=vendor -o $(BIN_NAME) -tags netgo $(LDFLAGS)
 
 release-arm64-bin: vendor
 	docker run  --rm -v `pwd`:$(SOURCE_PATH) -t --env GOOS=linux --env GOARCH=arm64  -i $(CONTAINER) go build -mod=vendor -o $(BIN_NAME) -tags netgo $(LDFLAGS)
 
 release-bin-mac: vendor
 	GOOS=darwin go build -mod=vendor -o $(BIN_NAME) $(MAC_LDFLAGS)
+
+release-bin-k8s:
+	GOOS=linux GOARCH=amd64 go build -mod=vendor -o $(BIN_NAME)
 
 release-bin-windows: vendor
 	docker run -it --rm -v `pwd`:$(SOURCE_PATH) -w $(SOURCE_PATH) -e CGO_ENABLED=1 docker.elastic.co/beats-dev/golang-crossbuild:1.16.4-main --build-cmd "make VERSION=$(VERSION) build" -p "windows/amd64"
@@ -85,7 +97,9 @@ install:
 
 build-env: build-x64-env build-arm64-env
 
+
 build-x64-env:
+	docker buildx use xbuilder
 	docker buildx build --platform linux/amd64 -t $(CONTAINER) -f Dockerfile.dev .
 
 build-arm64-env:

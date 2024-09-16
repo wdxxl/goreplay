@@ -28,7 +28,7 @@ func awsConfig() *aws.Config {
 	if region == "" {
 		region = os.Getenv("AWS_REGION")
 		if region == "" {
-			region = "us-east-1"
+			region = "cn-northwest-1" // us-east-1 change to cn-northwest-1 in case target pod didn't set up the env
 		}
 	}
 
